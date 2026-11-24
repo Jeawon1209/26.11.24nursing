@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="특수감각계통, 신경생리, 중추신경계통 교안에 근거한 해부생리 기말고사 대비 5지선다 퀴즈">
+  <meta name="theme-color" content="#f3f6f1">
+  <title>해부생리 기말고사 대비</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="questions.js" defer></script>
+  <script src="quiz.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">✚</span> 해부생리 퀴즈</div>
+      <button id="review" class="review" type="button" aria-pressed="false">오답 노트 <span id="review-count">0</span></button>
+    </div>
+  </header>
+  <main class="layout">
+    <aside class="sidebar">
+      <h2 id="topics-title">시험 범위</h2>
+      <nav id="topics" aria-labelledby="topics-title"></nav>
+    </aside>
+    <div class="content">
+      <section class="hero" aria-labelledby="app-title">
+        <div class="hero-copy">
+          <h1 id="app-title">해부생리 기말고사 대비</h1>
+          <p>교안 3개 · 5지선다 240문항</p>
+        </div>
+        <img class="hero-art" src="brain.webp" alt="" width="280" height="280">
+      </section>
+      <form id="settings" class="settings" aria-label="출제 설정">
+        <label for="difficulty">난이도
+          <select id="difficulty" name="difficulty">
+            <option value="">모든 난이도</option>
+            <option>최상</option>
+            <option>상</option>
+            <option>중상</option>
+            <option>중</option>
+          </select>
+        </label>
+        <label for="length">문항 수
+          <select id="length" name="length">
+            <option value="10">10문항</option>
+            <option value="20" selected>20문항</option>
+            <option value="40">40문항</option>
+            <option value="all">전체 문항</option>
+          </select>
+        </label>
+        <button class="primary" type="submit">새 퀴즈 시작</button>
+      </form>
+      <section class="quiz" id="quiz" aria-labelledby="session-title">
+        <div class="session-head">
+          <h2 id="session-title">전체 문제</h2>
+          <div id="position"></div>
+        </div>
+        <progress id="progress" max="20" value="0" aria-label="답변을 확인한 문항 수"></progress>
+        <div id="panel"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
