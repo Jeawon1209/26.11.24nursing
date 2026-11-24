@@ -1,6 +1,7 @@
 const aiTutor = (() => {
-  const model = "gemini-3.8-flash";
-  const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
+  const primaryModel = "gemini-3.8-flash";
+  const alternativeModel = "gemini-3.6-flash";
+  const modelsUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
   const settings = document.querySelector("#ai-settings");
   const form = document.querySelector("#ai-key-form");
   const keyInput = document.querySelector("#ai-key");
@@ -47,7 +48,8 @@ const aiTutor = (() => {
       return "Gemini API 키와 프로젝트의 Gemini API 권한을 확인해 주세요.";
     }
     if (status === 429) return "Gemini API 사용 한도에 도달했어요. 할당량이나 결제 설정을 확인해 주세요.";
-    if (status === 404) return "이 키로 Gemini 3.8 Flash를 사용할 수 없어요. 프로젝트의 모델 접근 권한을 확인해 주세요.";
+    if (status === 404) return "이 키로 요청한 Gemini 모델을 사용할 수 없어요. 프로젝트의 모델 접근 권한을 확인해 주세요.";
+    if (status === 503) return "Gemini 서버에서 요청을 처리할 수 없어요 (503). 잠시 뒤 다시 시도해 주세요.";
     if (status >= 500) return "Gemini 서비스가 일시적으로 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.";
     return "Gemini가 요청을 처리하지 못했어요. Google AI Studio에서 키 상태를 확인해 주세요.";
   }
@@ -72,7 +74,34 @@ const aiTutor = (() => {
     ].join("\n");
   }
 
-  async function requestExplanation(question, selectedAnswer, control, status, explanation) {
+  function waitForRetry(delay, signal) {
+    return new Promise(resolve => {
+      const timer = setTimeout(finish, delay);
+      signal.addEventListener("abort", finish, { once: true });
+      if (signal.aborted) finish();
+
+      function finish() {
+        clearTimeout(timer);
+        signal.removeEventListener("abort", finish);
+        resolve();
+      }
+    });
+  }
+
+  async function fetchWithRetry(url, options, status) {
+    const retryDelays = [1000, 2000];
+    for (const delay of retryDelays) {
+      const response = await fetch(url, options);
+      if (response.status !== 503 || options.signal.aborted) return response;
+      response.body?.cancel().catch(() => {});
+      status.textContent = "Gemini 서버가 일시적으로 응답하지 않아 다시 시도하고 있어요 (503).";
+      await waitForRetry(delay + Math.random() * 350, options.signal);
+      if (options.signal.aborted) return response;
+    }
+    return fetch(url, options);
+  }
+
+  async function requestExplanation(question, selectedAnswer, model, control, alternative, status, explanation) {
     if (!key) {
       settings.open = true;
       keyInput.focus();
@@ -88,6 +117,7 @@ const aiTutor = (() => {
       controller.abort();
     }, 45000);
     control.disabled = true;
+    alternative.hidden = true;
     status.textContent = "Gemini가 해설을 작성하고 있어요.";
     controller.signal.addEventListener("abort", () => {
       status.textContent = timedOut
@@ -96,7 +126,7 @@ const aiTutor = (() => {
     }, { once: true });
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetchWithRetry(modelsUrl + model + ":generateContent", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         credentials: "omit",
@@ -107,11 +137,16 @@ const aiTutor = (() => {
           contents: [{ role: "user", parts: [{ text: buildPrompt(question, selectedAnswer) }] }],
           generationConfig: { maxOutputTokens: 1024, thinkingConfig: { thinkingLevel: "LOW" } },
         }),
-      });
+      }, status);
+      if (controller.signal.aborted || activeRequest !== controller) return;
       const payload = await response.json().catch(() => null);
       if (controller.signal.aborted || activeRequest !== controller) return;
       if (!response.ok) {
-        status.textContent = errorMessage(response.status, payload);
+        const canUseAlternative = response.status === 503 && model === primaryModel;
+        alternative.hidden = !canUseAlternative;
+        status.textContent = canUseAlternative
+          ? "Gemini 3.8 Flash가 재시도 후에도 응답하지 않아요 (503). 다른 모델을 선택할 수 있어요."
+          : errorMessage(response.status, payload);
         return;
       }
 
@@ -126,8 +161,8 @@ const aiTutor = (() => {
 
       explanation.textContent = text;
       explanation.hidden = false;
-      status.textContent = "Gemini 해설이 준비됐어요.";
-      if (document.activeElement === control) explanation.focus();
+      status.textContent = model === primaryModel ? "Gemini 3.8 Flash 해설" : "Gemini 3.6 Flash 해설";
+      if (document.activeElement === control || document.activeElement === alternative) explanation.focus();
       control.hidden = true;
     } catch {
       if (!controller.signal.aborted && activeRequest === controller) {
@@ -147,6 +182,11 @@ const aiTutor = (() => {
     control.className = "secondary";
     control.type = "button";
     control.textContent = "AI 해설 요청";
+    const alternative = document.createElement("button");
+    alternative.className = "secondary ai-alternative";
+    alternative.type = "button";
+    alternative.hidden = true;
+    alternative.textContent = "Gemini 3.6 Flash로 요청";
     const status = document.createElement("p");
     status.className = "ai-status";
     status.setAttribute("role", "status");
@@ -155,9 +195,12 @@ const aiTutor = (() => {
     explanation.hidden = true;
     explanation.tabIndex = -1;
     control.addEventListener("click", () => {
-      requestExplanation(question, selectedAnswer, control, status, explanation);
+      requestExplanation(question, selectedAnswer, primaryModel, control, alternative, status, explanation);
     });
-    container.append(control, status, explanation);
+    alternative.addEventListener("click", () => {
+      requestExplanation(question, selectedAnswer, alternativeModel, control, alternative, status, explanation);
+    });
+    container.append(control, alternative, status, explanation);
     return container;
   }
 

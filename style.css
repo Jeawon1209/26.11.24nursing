@@ -171,6 +171,7 @@ progress[hidden] { display: none; }
 #ai-key-help, .ai-status { margin: .6rem 0 0; color: var(--muted); font-size: .875rem; line-height: 1.55; }
 .ai-status:empty { display: none; }
 .ai-explanation { margin-top: .8rem; }
+.ai-alternative { margin-left: .45rem; }
 .ai-response {
   margin: .65rem 0 0;
   border-left: 3px solid #78a998;

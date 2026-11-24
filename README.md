@@ -18,6 +18,8 @@
 
 **Gemini API 키 설정**에서 본인의 키를 입력한 뒤, 문항에 답하고 **AI 해설 요청**을 누릅니다. 정답을 고르는 핵심 단서나 의학용어 암기 요령을 `gemini-3.8-flash`로 요청합니다.
 
+Gemini 3.8 Flash가 HTTP 503을 반환하면 최대 두 번 재시도합니다. 계속 실패하면 해당 문항에서 Gemini 3.6 Flash를 직접 선택할 수 있습니다.
+
 키는 현재 페이지의 메모리에서 사용합니다. AI 해설을 요청하면 현재 문항, 선택한 답, 정답과 기존 해설을 브라우저에서 Google Gemini API로 전송합니다. 사용량은 입력한 키에 연결된 프로젝트에 반영됩니다.
 
 [Gemini API 키 안내](https://ai.google.dev/gemini-api/docs/api-key)
