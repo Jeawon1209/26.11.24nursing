@@ -1,8 +1,15 @@
 const topics = [...new Set(questionBank.map(question => question.topic))];
 const all = "전체 문제";
 const review = "오답 노트";
+const mixedTerms = "양방향 섞어 풀기";
+const termModes = new Map([
+  ...termDirections.map(direction => [direction.label, direction.id]),
+  [mixedTerms, null],
+]);
 const storageKey = "anatomy-final-mistakes-v1";
-const questionsById = new Map(questionBank.map(question => [question.id, question]));
+const questionsById = new Map(
+  [...questionBank, ...termQuestionBank].map(question => [question.id, question]),
+);
 const title = document.querySelector("#session-title");
 const panel = document.querySelector("#panel");
 const progress = document.querySelector("#progress");
@@ -12,7 +19,7 @@ const reviewCount = document.querySelector("#review-count");
 const settings = document.querySelector("#settings");
 const difficulty = document.querySelector("#difficulty");
 const length = document.querySelector("#length");
-const topicButtons = new Map();
+const modeButtons = new Map();
 const mistakes = loadMistakes();
 let session;
 let studyMode = all;
@@ -62,13 +69,21 @@ function button(label, style, action) {
 function questionsFor(mode) {
   if (mode === all) return questionBank;
   if (mode === review) return [...mistakes].map(id => questionsById.get(id));
+  if (termModes.has(mode)) {
+    const direction = termModes.get(mode);
+    return termQuestionBank.filter(question => !direction || question.direction === direction);
+  }
   return questionBank.filter(question => question.topic === mode);
 }
 
+function filteredQuestions(mode) {
+  const candidates = questionsFor(mode);
+  if (termModes.has(mode) || !difficulty.value) return candidates;
+  return candidates.filter(question => question.difficulty === difficulty.value);
+}
+
 function updateLengths() {
-  const available = questionsFor(studyMode).filter(question => {
-    return !difficulty.value || question.difficulty === difficulty.value;
-  }).length;
+  const available = filteredQuestions(studyMode).length;
   for (const option of length.options) {
     option.disabled = option.value !== "all" && Number(option.value) >= available;
     if (option.value === "all") option.textContent = "전체 " + available + "문항";
@@ -80,9 +95,7 @@ function updateLengths() {
 function practice(mode, focus = true) {
   studyMode = mode;
   updateLengths();
-  const candidates = questionsFor(mode).filter(question => {
-    return !difficulty.value || question.difficulty === difficulty.value;
-  });
+  const candidates = filteredQuestions(mode);
   const limit = length.value === "all" ? candidates.length : Number(length.value);
   start(mode, candidates, focus, limit);
 }
@@ -96,11 +109,12 @@ function start(mode, questions = questionsFor(mode), focus = true, limit = quest
     missed: [],
   };
   title.textContent = mode;
-  for (const [topic, topicButton] of topicButtons) {
-    topicButton.setAttribute("aria-pressed", String(topic === mode));
+  for (const [name, modeButton] of modeButtons) {
+    modeButton.setAttribute("aria-pressed", String(name === mode));
   }
   reviewButton.setAttribute("aria-pressed", String(mode === review));
   settings.hidden = mode === review;
+  difficulty.closest("label").hidden = termModes.has(mode);
   if (questions.length) renderQuestion();
   else renderEmpty();
   if (focus) panel.querySelector("[tabindex]").focus();
@@ -118,10 +132,15 @@ function renderQuestion() {
   showProgress(session.index);
   const question = session.questions[session.index];
   const category = element("p", "category", question.topic);
-  const level = element("span", "difficulty", "난이도 " + question.difficulty);
-  level.dataset.level = question.difficulty;
-  category.append(level);
+  if (question.direction) {
+    category.append(element("span", "difficulty direction", question.directionLabel));
+  } else {
+    const level = element("span", "difficulty", "난이도 " + question.difficulty);
+    level.dataset.level = question.difficulty;
+    category.append(level);
+  }
   const heading = element("h3", "question", question.prompt);
+  if (question.promptLanguage) heading.lang = question.promptLanguage;
   heading.id = "current-question";
   heading.tabIndex = -1;
   const form = element("form");
@@ -145,7 +164,9 @@ function renderQuestion() {
     input.addEventListener("change", () => { check.disabled = false; });
     const number = element("span", "option-number", String(index + 1));
     number.setAttribute("aria-hidden", "true");
-    label.append(input, number, element("span", "", value));
+    const answerText = element("span", "", value);
+    if (question.answerLanguage) answerText.lang = question.answerLanguage;
+    label.append(input, number, answerText);
     options.append(label);
     return { label, input, value };
   });
@@ -238,16 +259,20 @@ function renderEmpty() {
   panel.replaceChildren(heading, actions);
 }
 
-const navigation = document.querySelector("#topics");
-for (const topic of [all, ...topics]) {
-  const topicButton = button("", "topic", () => practice(topic));
-  topicButton.append(
-    element("span", "", topic),
-    element("span", "", questionsFor(topic).length + "문항"),
-  );
-  topicButtons.set(topic, topicButton);
-  navigation.append(topicButton);
+function renderModeButtons(navigation, modes) {
+  for (const mode of modes) {
+    const modeButton = button("", "topic", () => practice(mode));
+    modeButton.append(
+      element("span", "", mode),
+      element("span", "", questionsFor(mode).length + "문항"),
+    );
+    modeButtons.set(mode, modeButton);
+    navigation.append(modeButton);
+  }
 }
+
+renderModeButtons(document.querySelector("#topics"), [all, ...topics]);
+renderModeButtons(document.querySelector("#terms"), [...termModes.keys()]);
 reviewButton.addEventListener("click", () => start(review));
 reviewCount.textContent = mistakes.size;
 difficulty.addEventListener("change", updateLengths);
