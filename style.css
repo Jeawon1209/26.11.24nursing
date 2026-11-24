@@ -121,7 +121,7 @@ progress[hidden] { display: none; }
   font-weight: 710;
   color: #304b43;
 }
-.settings select {
+.settings select, #ai-model {
   appearance: none;
   min-height: 2.65rem;
   width: 100%;
@@ -156,6 +156,7 @@ progress[hidden] { display: none; }
 }
 .ai-settings summary { cursor: pointer; color: var(--deep); font-weight: 750; }
 #ai-key-form { margin-top: .85rem; }
+#ai-model { width: min(100%, 28rem); margin-bottom: .7rem; }
 #ai-key-form label { display: block; margin-bottom: .35rem; font-weight: 700; }
 #ai-key {
   width: min(100%, 28rem);
@@ -171,7 +172,6 @@ progress[hidden] { display: none; }
 #ai-key-help, .ai-status { margin: .6rem 0 0; color: var(--muted); font-size: .875rem; line-height: 1.55; }
 .ai-status:empty { display: none; }
 .ai-explanation { margin-top: .8rem; }
-.ai-alternative { margin-left: .45rem; }
 .ai-response {
   margin: .65rem 0 0;
   border-left: 3px solid #78a998;
