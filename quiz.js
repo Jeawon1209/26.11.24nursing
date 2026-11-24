@@ -143,6 +143,13 @@ function renderQuestion() {
   if (question.promptLanguage) heading.lang = question.promptLanguage;
   heading.id = "current-question";
   heading.tabIndex = -1;
+  const questionLine = element("div", "question-line");
+  questionLine.append(heading);
+  if (question.emphasis) {
+    const badge = element("span", "exam-priority", question.emphasis === "red" ? "최우선" : "중요");
+    badge.dataset.color = question.emphasis;
+    questionLine.append(badge);
+  }
   const form = element("form");
   const options = element("fieldset", "options");
   options.setAttribute("aria-labelledby", heading.id);
@@ -220,7 +227,7 @@ function renderQuestion() {
 
   actions.append(check);
   form.append(options, feedback, actions);
-  panel.replaceChildren(category, heading, form);
+  panel.replaceChildren(category, questionLine, form);
 }
 
 function renderResult() {
