@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="questions.js" defer></script>
   <script src="terms.js" defer></script>
+  <script src="ai.js" defer></script>
   <script src="quiz.js" defer></script>
 </head>
 <body>
@@ -33,6 +34,19 @@
         </div>
         <img class="hero-art" src="brain.webp" alt="" width="280" height="280">
       </section>
+      <details class="ai-settings" id="ai-settings">
+        <summary>Gemini API 키 설정</summary>
+        <form id="ai-key-form" autocomplete="off">
+          <label for="ai-key">Gemini API 키</label>
+          <input type="password" id="ai-key" maxlength="512" autocomplete="off" spellcheck="false" aria-describedby="ai-key-help" placeholder="API 키 입력">
+          <div class="ai-key-actions">
+            <button class="secondary" type="submit">이 탭에서 사용</button>
+            <button class="secondary" id="ai-clear-key" type="button" disabled>키 지우기</button>
+          </div>
+          <p class="ai-status" id="ai-key-status" role="status"></p>
+          <p id="ai-key-help">키는 이 탭에서만 사용해요. AI 해설을 요청하면 현재 문항과 해설이 Google로 전송되며, 호출은 키에 연결된 프로젝트의 사용량으로 집계돼요.</p>
+        </form>
+      </details>
       <form id="settings" class="settings" aria-label="출제 설정">
         <label for="difficulty">난이도
           <select id="difficulty" name="difficulty">

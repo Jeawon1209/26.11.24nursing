@@ -146,3 +146,37 @@ progress[hidden] { display: none; }
   .settings { margin-top: .85rem; padding: .7rem; gap: .5rem; }
   .settings label { flex-basis: 7rem; }
 }
+
+.ai-settings {
+  margin-top: .85rem;
+  padding: .72rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: .8rem;
+  background: #fafcf9;
+}
+.ai-settings summary { cursor: pointer; color: var(--deep); font-weight: 750; }
+#ai-key-form { margin-top: .85rem; }
+#ai-key-form label { display: block; margin-bottom: .35rem; font-weight: 700; }
+#ai-key {
+  width: min(100%, 28rem);
+  padding: .58rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  background: white;
+  color: var(--deep);
+  font: inherit;
+}
+.ai-key-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .65rem; }
+.ai-key-actions button:disabled { opacity: .55; }
+#ai-key-help, .ai-status { margin: .6rem 0 0; color: var(--muted); font-size: .875rem; line-height: 1.55; }
+.ai-status:empty { display: none; }
+.ai-explanation { margin-top: .8rem; }
+.ai-response {
+  margin: .65rem 0 0;
+  border-left: 3px solid #78a998;
+  padding: .35rem .7rem;
+  color: var(--deep);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

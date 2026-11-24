@@ -129,6 +129,7 @@ function showProgress(answered) {
 }
 
 function renderQuestion() {
+  aiTutor.resetQuestion();
   showProgress(session.index);
   const question = session.questions[session.index];
   const category = element("p", "category", question.topic);
@@ -212,6 +213,8 @@ function renderQuestion() {
       element("p", "source", "근거 · " + question.topic + " 교안 · PDF " + question.pages + "쪽"),
     );
 
+    form.insertBefore(aiTutor.render(question, chosen.value), actions);
+
     const last = session.index === session.questions.length - 1;
     actions.replaceChildren(button(last ? "결과 보기" : "다음 문제", "primary", () => {
       if (last) {
@@ -231,6 +234,7 @@ function renderQuestion() {
 }
 
 function renderResult() {
+  aiTutor.resetQuestion();
   showProgress(session.questions.length);
   position.textContent = "완료";
   const mode = session.mode;
@@ -258,6 +262,7 @@ function renderResult() {
 }
 
 function renderEmpty() {
+  aiTutor.resetQuestion();
   showProgress(0);
   const heading = element("h3", "question", "복습할 오답이 없어요.");
   heading.tabIndex = -1;
